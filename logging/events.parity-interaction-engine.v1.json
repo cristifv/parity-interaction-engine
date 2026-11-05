@@ -1,0 +1,880 @@
+{
+  "schema_version": 1,
+  "service": "parity-interaction-engine",
+  "description": "parity-interaction-engine's log events (log-record.v1, parity-contracts CONVENTIONS \"Logging\"). Every IE log call names one of these (or a common one) in `event`; ci.sh checks the records its tests capture with contract-check. Call-scoped records carry the xsid (the interaction id, a UUIDv7) and the number map's tenant.",
+  "events": {
+    "agent.connected": {
+      "description": "The agent's leg answered and routing-engine recorded CONNECTED.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "agent.muted": {
+      "description": "The agent muted by DTMF.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "agent.unmuted": {
+      "description": "The agent unmuted by DTMF.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "agent.wrap_up_ended": {
+      "description": "routing-engine: the agent's wrap-up ended (attrs.agent_id, reservation_id).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "arrival.dropped": {
+      "description": "An arrival was dropped: the arrivals channel is full.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "arrival.redirect_failed": {
+      "description": "A redirect failed: the arrival is refused instead.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "call.arrival_lost": {
+      "description": "The telephony client no longer holds the arrival this replica claimed.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "call.arrived": {
+      "description": "TC offered an arrival to this replica (attrs: masked numbers, the flow). Not call-scoped: a number outside the map has no tenant.",
+      "levels": [
+        "info"
+      ]
+    },
+    "call.claim_taken": {
+      "description": "Another owner holds the interaction in etcd: this replica sends nothing.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "call.declined": {
+      "description": "The arrival was refused (attrs.sip_status): an unknown number, another tenant's, no etcd lease.",
+      "levels": [
+        "info",
+        "warn"
+      ]
+    },
+    "call.ending_stuck": {
+      "description": "The call waited in Ending over 5 min for TC's end; the owner key is kept (an operator's case, IE-056).",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "call.mailbox_closed": {
+      "description": "The session's mailbox closed (fenced, or the node declared dead).",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "call.task_done": {
+      "description": "The call's task ended (attrs.phase).",
+      "levels": [
+        "info"
+      ]
+    },
+    "call.tenant_mismatch": {
+      "description": "X-Tenant-ID disagreed with the number map: the call is refused and alerted.",
+      "levels": [
+        "error"
+      ],
+      "call_scoped": true
+    },
+    "cdr.migration_failed": {
+      "description": "The CDR migration failed; retried.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "cdr.schema_applied": {
+      "description": "The CDR schema is applied (local profiles only).",
+      "levels": [
+        "info"
+      ]
+    },
+    "cdr.write_lost": {
+      "description": "A CDR write was lost (the queue was full, or Postgres refused it).",
+      "levels": [
+        "error"
+      ]
+    },
+    "cdr.write_retried": {
+      "description": "A CDR write failed; retried.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "cdr.written": {
+      "description": "A CDR row or snapshot was written (attrs.write: progress, close, orphan; insert-only, idempotent).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "outcome"
+      ]
+    },
+    "consent.decided": {
+      "description": "The recording consent decision (attrs.decision, basis; not_announced: the announcement couldn't be played, IE-068).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "attrs": [
+        "decision",
+        "basis"
+      ]
+    },
+    "drain.completed": {
+      "description": "Draining finished (attrs.drainer, or the drained file).",
+      "levels": [
+        "info"
+      ]
+    },
+    "drain.failed": {
+      "description": "A drain failed or ran out of time: no drained file.",
+      "levels": [
+        "error"
+      ]
+    },
+    "dtmf.action_reported": {
+      "description": "parity-ms acted on an agent's DTMF code (attrs.action, result, recording, muted): never the digits or the code.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "etcd.keepalive_failed": {
+      "description": "An etcd keepalive failed.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "etcd.registered": {
+      "description": "This replica registered in etcd (its lease, the replica key).",
+      "levels": [
+        "info"
+      ]
+    },
+    "flow.counted": {
+      "description": "A flow counter moved (attrs.counter: a skipped verb, a retried or skipped prompt, a re-attach, ...).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "attrs": [
+        "counter"
+      ]
+    },
+    "health_file.failed": {
+      "description": "The healthy file couldn't be written or removed.",
+      "levels": [
+        "error"
+      ]
+    },
+    "interaction.closed_after_restart": {
+      "description": "The end of a call this replica id owned before a restart (kill -9): its CDR closed from TC's end, its agent freed.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "interaction.created": {
+      "description": "This replica claimed ie/owner for the call: IE owns it from here (attrs.origin: pstn, agent, api, callback, consult; parent_xsid when another call caused it).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "owner_epoch"
+      ],
+      "attrs": [
+        "origin"
+      ]
+    },
+    "interaction.ended": {
+      "description": "The customer's call ended and its CDR closes (attrs.end_reason, ended_by, queue_outcome, duration_ms).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "attrs": [
+        "end_reason"
+      ]
+    },
+    "ivr.input_collected": {
+      "description": "A gather ended: attrs.presses counts keys, attrs.step is the route taken. Digits never appear.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "attrs": [
+        "presses",
+        "step"
+      ]
+    },
+    "leg.added": {
+      "description": "An agent's leg is placed through TC (attrs.role agent; leg_id is the agent leg's).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "leg_id"
+      ],
+      "attrs": [
+        "role"
+      ]
+    },
+    "leg.dtmf_actions_off": {
+      "description": "The node doesn't list dtmf_actions: the agent's codes are off on this leg.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "leg.removed": {
+      "description": "A leg this call placed is hung up (attrs.reason).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "leg_id"
+      ],
+      "attrs": [
+        "reason"
+      ]
+    },
+    "leg.updated": {
+      "description": "TC reported a leg's state (attrs.role, state, cause, sip_status).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "leg_id"
+      ]
+    },
+    "log.external": {
+      "description": "A record of a library IE uses (component names it); its text in msg.",
+      "levels": [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ]
+    },
+    "management.bind_failed": {
+      "description": "The management port can't be bound; retried.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "management.listening": {
+      "description": "The management port listens (attrs.addr).",
+      "levels": [
+        "info"
+      ]
+    },
+    "owner.claim_failed": {
+      "description": "The owner claim failed (etcd, or the lease is gone): the arrival is declined.",
+      "levels": [
+        "error"
+      ],
+      "call_scoped": true
+    },
+    "owner.lease_lost": {
+      "description": "No etcd keepalive worked for a whole TTL (or the lease expired): new calls are declined.",
+      "levels": [
+        "error"
+      ]
+    },
+    "owner.lease_restored": {
+      "description": "A new etcd lease is live, with the replica key: claims resume.",
+      "levels": [
+        "info"
+      ]
+    },
+    "owner.release_failed": {
+      "description": "The owner key couldn't be released (its lease ends it).",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "owner.released": {
+      "description": "The call's ie/owner key was released.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "prompt.finished": {
+      "description": "A prompt finished (attrs.reason, played_ms).",
+      "levels": [
+        "debug"
+      ],
+      "call_scoped": true
+    },
+    "play.started": {
+      "description": "TC reported a play started (contracts 0.17.0 result_events; attrs.play_id).",
+      "levels": [
+        "debug"
+      ],
+      "call_scoped": true
+    },
+    "play.failed": {
+      "description": "TC reported a play ended without starting (0.17.0 PlayFailed; attrs.play_id, reason): IE-068 retries once or skips; a consent prompt means no recording.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "prompt.started": {
+      "description": "A prompt plays to the caller (attrs.prompt_id, play_id, looped).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "queue.position_announced": {
+      "description": "The caller heard its position (attrs.position).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "queue.position_changed": {
+      "description": "routing-engine's position for the entry (attrs.position, expected_wait_s).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.confirmed": {
+      "description": "TC's RecordingStarted event for a leg.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.disabled": {
+      "description": "Consent allows recording but recordings are off ([recording] mode).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.failed": {
+      "description": "TC refused a leg's recording: a consented caller not recorded; the call goes on.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "recording.key_failed": {
+      "description": "The OS RNG failed: the recording is not started.",
+      "levels": [
+        "error"
+      ],
+      "call_scoped": true
+    },
+    "recording.paused": {
+      "description": "The agent paused the recording by DTMF (PCI): no digit anywhere.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.requested": {
+      "description": "IE asked TC to record a leg (attrs.recording_id, agent_leg; a null sink until step 9).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.resumed": {
+      "description": "The agent resumed the recording by DTMF.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.started": {
+      "description": "TC started a leg's recording (attrs.agent_leg).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "recording.stopped": {
+      "description": "A leg's recording stopped (attrs.duration_ms, pauses, dtmf_pauses, size_bytes).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "routing.acks_ignored": {
+      "description": "routing-engine ignored acknowledgements as stale or foreign (attrs.ignored).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.assigned": {
+      "description": "routing-engine assigned an agent (Watch: Assigned).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "agent_id",
+        "reservation_id"
+      ]
+    },
+    "routing.call_ended": {
+      "description": "CallEnded answered: the agent's wrap-up starts.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "op"
+      ]
+    },
+    "routing.callback_ignored": {
+      "description": "RunCallback isn't handled before step 12: left to RE's redelivery.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.caller_gone_reported": {
+      "description": "An Assigned for a call that had ended: CALLER_GONE reported (abandon vs assign).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "routing.client_started": {
+      "description": "The routing-engine client started (attrs.endpoints).",
+      "levels": [
+        "info"
+      ]
+    },
+    "routing.delivery_rebased": {
+      "description": "MF-1a: routing-engine (restarted without its state) holds nothing of the call and numbers afresh: the binding's delivery sequence restarts from RE's numbering (attrs.previous_next, previous_acked, last_delivery_seq).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "routing.dequeued": {
+      "description": "Dequeue answered (attrs.reason, already_gone).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "op"
+      ]
+    },
+    "routing.endpoint_changed": {
+      "description": "Requests and the stream move to another routing-engine instance (attrs.endpoint).",
+      "levels": [
+        "debug"
+      ]
+    },
+    "routing.enqueued": {
+      "description": "Enqueue answered: the entry (attrs.existing, position).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "queue_id",
+        "entry_id",
+        "op",
+        "outcome"
+      ]
+    },
+    "routing.leader_changed": {
+      "description": "IE-059: routing-engine's leader changed (leader_epoch rose; attrs.from_leader_epoch): calls keep going and re-attach. Never an exit.",
+      "levels": [
+        "info"
+      ],
+      "requires": [
+        "leader_epoch"
+      ]
+    },
+    "routing.leader_learned": {
+      "description": "routing-engine named a leader outside the configured instances: added.",
+      "levels": [
+        "info"
+      ]
+    },
+    "routing.machine_bug": {
+      "description": "A routing request reached the wrong runner or overlapped (a machine bug).",
+      "levels": [
+        "error"
+      ]
+    },
+    "routing.mailbox_full": {
+      "description": "A call's routing mailbox is full or closed: RE redelivers.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.message_dropped": {
+      "description": "A routing message was dropped (no target, or another owner epoch).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.message_held": {
+      "description": "A routing message past a gap is held back until RE redelivers the missing one (CR-053).",
+      "levels": [
+        "debug"
+      ]
+    },
+    "routing.orphaned": {
+      "description": "Routing messages for an interaction this replica doesn't hold (adoption is step 8).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.outcome_recorded": {
+      "description": "ReportOutcome answered: what routing-engine recorded first (attrs.reported, recorded).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "op",
+        "outcome"
+      ]
+    },
+    "routing.overflowed": {
+      "description": "routing-engine's overflow for the entry (attrs.action).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "entry_id"
+      ]
+    },
+    "routing.reattached": {
+      "description": "IE-059: after a leader change the call re-attached (attrs.entry, reservations).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "op",
+        "outcome"
+      ]
+    },
+    "routing.request_refused": {
+      "description": "A routing request without routing or an owner: refused.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.request_sent": {
+      "description": "A request to routing-engine is sent (op).",
+      "levels": [
+        "debug"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "op"
+      ]
+    },
+    "routing.revoked": {
+      "description": "routing-engine revoked a reservation (attrs.reason).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true,
+      "requires": [
+        "reservation_id"
+      ]
+    },
+    "routing.rpc_failed": {
+      "description": "A routing request failed after its retries (op, outcome, error).",
+      "levels": [
+        "warn",
+        "error"
+      ],
+      "requires": [
+        "op",
+        "outcome"
+      ]
+    },
+    "routing.rpc_retried": {
+      "description": "A routing request is retried (op, attempt): RE unavailable, or a standby pointed at the leader.",
+      "levels": [
+        "debug"
+      ],
+      "requires": [
+        "op"
+      ]
+    },
+    "routing.stream_ended": {
+      "description": "The routing stream ended (attrs.code): reconnecting.",
+      "levels": [
+        "debug"
+      ]
+    },
+    "routing.stream_live": {
+      "description": "The Watch stream to routing-engine is live (attrs.endpoint).",
+      "levels": [
+        "info"
+      ]
+    },
+    "routing.stream_lost": {
+      "description": "No routing message within the heartbeat timeout: reconnecting.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "routing.stream_superseded": {
+      "description": "Another process watches routing-engine with this replica id: stopped.",
+      "levels": [
+        "error"
+      ]
+    },
+    "routing.tenant_mismatch": {
+      "description": "A routing message names another tenant for this interaction: dropped and alerted.",
+      "levels": [
+        "error"
+      ]
+    },
+    "service.stop_slow": {
+      "description": "A part didn't stop within 1 s at exit.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "session.closed_from_tombstone": {
+      "description": "The session closed from TC's tombstone: its end never reached its owner.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "session.degraded": {
+      "description": "The session's owner is not keeping up with its events.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "session.end_dropped": {
+      "description": "An orphan's end was dropped: the events channel is full.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "session.end_record_failed": {
+      "description": "The ENDED record failed: TC's end isn't acknowledged and is replayed.",
+      "levels": [
+        "error"
+      ],
+      "call_scoped": true
+    },
+    "session.ended": {
+      "description": "TC's SessionEnded for the call (attrs.reason, sip_status).",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "session.event_ignored": {
+      "description": "A telephony event the flow doesn't use (attrs.kind).",
+      "levels": [
+        "debug"
+      ],
+      "call_scoped": true
+    },
+    "session.fenced": {
+      "description": "A newer owner has the session.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "session.gone": {
+      "description": "TC no longer has the session on a live node: it ended.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "session.managed": {
+      "description": "The node's stream is back.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "session.orphaned": {
+      "description": "Events for a session this replica doesn't hold (adoption is step 8).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "session.reconcile_asked": {
+      "description": "Ending waited past its deadline for TC's end: TC was asked (attrs.found).",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "session.resynced": {
+      "description": "TC's snapshot replaced IE's view of the session.",
+      "levels": [
+        "info"
+      ],
+      "call_scoped": true
+    },
+    "session.snapshot_ignored": {
+      "description": "An older telephony snapshot was ignored.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "session.unmanaged": {
+      "description": "The node's stream is lost: the call keeps its audio, no command and no timer until it is back.",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "session.zombie_ended": {
+      "description": "IE had ended the session as dead while TC still had it live: ended.",
+      "levels": [
+        "error"
+      ],
+      "call_scoped": true
+    },
+    "signal.received": {
+      "description": "A signal (attrs.signal): the first drains, a second exits at once.",
+      "levels": [
+        "info",
+        "warn"
+      ]
+    },
+    "telephony.acks_not_durable": {
+      "description": "SessionEnded acknowledgements aren't durable until step 8 (MemoryEndedLog).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.arrivals_toggled": {
+      "description": "New arrivals are taken or paused (attrs.accepting: false while there is no etcd lease, IE-055).",
+      "levels": [
+        "info"
+      ]
+    },
+    "telephony.clock_skewed": {
+      "description": "A media node's clock is off by more than 100 ms (attrs.skew_ms).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.command_done": {
+      "description": "A command to TC succeeded (attrs.command).",
+      "levels": [
+        "debug"
+      ],
+      "call_scoped": true
+    },
+    "telephony.command_failed": {
+      "description": "TC refused a command as a bug (attrs.command, code).",
+      "levels": [
+        "error"
+      ]
+    },
+    "telephony.command_not_done": {
+      "description": "A command to TC didn't succeed (attrs.command, outcome).",
+      "levels": [
+        "warn"
+      ],
+      "call_scoped": true
+    },
+    "telephony.command_unknown": {
+      "description": "A telephony command's result is unknown (attrs.reconciled).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.event_dropped": {
+      "description": "A telephony event names another node: dropped.",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.intent_refused": {
+      "description": "A telephony command was refused before it was sent (attrs.command, rule).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.node_declared_dead": {
+      "description": "A media node was declared dead on evidence: its sessions are ended.",
+      "levels": [
+        "error"
+      ]
+    },
+    "telephony.node_link_changed": {
+      "description": "A media node's link changed (attrs.link).",
+      "levels": [
+        "info"
+      ]
+    },
+    "telephony.node_lost": {
+      "description": "A media node's stream is lost: its sessions are unmanaged (they keep their audio).",
+      "levels": [
+        "warn"
+      ]
+    },
+    "telephony.node_restarted": {
+      "description": "A media node has a new incarnation: its sessions are resynced.",
+      "levels": [
+        "info"
+      ]
+    },
+    "telephony.stream_silent": {
+      "description": "A media node's stream was silent past its liveness.",
+      "levels": [
+        "info"
+      ]
+    },
+    "telephony.stream_superseded": {
+      "description": "Another process uses this replica id on a node's stream: readiness failed.",
+      "levels": [
+        "error"
+      ]
+    }
+  }
+}

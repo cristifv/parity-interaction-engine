@@ -1,0 +1,70 @@
+# parity-interaction-engine configuration (ADR 0001 §5). Unknown keys are an error.
+# The state directory is not here: it is /tmp (ARCHITECTURE.md §7.3); IE_STATE_DIR overrides it
+# for zone "local" only. IE_CONFIG names this file; IE_LOG overrides logging.filter.
+
+[service]
+zone = "local"                 # ^[a-z0-9-]{1,32}$
+bin = "bin-a"                  # ^[a-z0-9-]{1,32}$
+# replica_id defaults to $HOSTNAME
+
+[management]
+listen = "127.0.0.1:9600"      # deployments set 0.0.0.0:9600; Prometheus only (network policy)
+
+[lifecycle]
+deregistration_delay_ms = 5000 # §7.3 step 2; at most 10000
+drain_timeout_ms = 45000       # from SIGTERM to the end of step 3; at most 50000 (60 s grace)
+
+[logging]
+filter = "info"                # EnvFilter syntax
+buffer_lines = 65536           # the non-blocking writer's queue
+
+# The call path (steps 3 and 4). All or nothing: [telephony] needs [etcd], [tenants], [flows], [cdr].
+# [telephony]
+# profile = "dev"                # dev, demo or test until step 8 (production is refused)
+# test_peer_header = true        # until TC has mTLS (TC step 8); never in production
+# [[telephony.nodes]]
+# id = "media-1"
+# grpc = "http://127.0.0.1:9700"
+# management = "127.0.0.1:9701"
+#
+# [etcd]                         # STEP-3 MINIMAL ownership (step 7 completes it)
+# endpoint = "http://127.0.0.1:2379"
+# lease_ttl_s = 10
+#
+# [tenants]                      # parity-store's tenant maps file (parity-contracts schemas/tenants)
+# maps_file = "../parity-contracts/tenants/test-tenants.v1.json"
+# allow_test_data = true         # the shared test tenants carry a `test` section
+#
+# [flows]                        # flows, the numbers bound to them, consent (demo/flows.json)
+# file = "demo/flows.json"
+#
+# [cdr]                          # Postgres; the password in a file (mode 600), never here
+# host = "127.0.0.1"
+# port = 5432
+# user = "parity_ie"
+# dbname = "parity_interaction_engine"
+# password_file = "../secrets/local-dev/ie-cdr-postgres.password"
+# migrate = true                 # dev, demo and test only
+#
+# [routing]                      # off by default; refused in production (routing-engine phase 1)
+# enabled = false                # true: a `dial` to a queue enqueues with parity-cc-routing; IE
+#                                # places the agent's leg through TC when an agent accepts
+# endpoint = "http://127.0.0.1:9800"
+# endpoints = []                 # IE-059: the bin's other instances (leader and standbys, any
+#                                # order; joined with `endpoint`): requests and the stream follow
+#                                # the leader (`parity-leader`, else the next instance); a leader
+#                                # change never stops IE, calls re-attach
+# rpc_timeout_ms = 300
+# enqueue_budget_s = 60
+#
+# [recording]                    # step 6; refused in production until step 9's keys (MS-012)
+# mode = "off"                   # "null_sink": StartRecording per leg on TC's null sink (local
+#                                # profiles: state and events only, no audio written)
+#
+# [agents]                       # step 6: the agent leg's DTMF action codes (P5); never logged.
+# dtmf_inter_digit_ms = 2000     # these are the platform defaults (tenant config in step 10)
+# dtmf_actions = [
+#   {sequence = "*1", action = "recording_pause"},
+#   {sequence = "*2", action = "recording_resume"},
+#   {sequence = "*3", action = "mute_toggle"},
+# ]

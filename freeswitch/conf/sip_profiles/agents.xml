@@ -1,0 +1,24 @@
+<!-- The agents' side: SIP.js registers over plain WebSocket (5066) from http://localhost.
+     A deviation from PLAN's opensips-in-the-path, recorded in PROGRESS (ADR 0002 §2). -->
+<profile name="agents">
+  <settings>
+    <param name="context" value="agents"/>
+    <param name="dialplan" value="XML"/>
+    <param name="sip-ip" value="127.0.0.1"/>
+    <param name="rtp-ip" value="127.0.0.1"/>
+    <param name="ext-sip-ip" value="127.0.0.1"/>
+    <param name="ext-rtp-ip" value="127.0.0.1"/>
+    <param name="sip-port" value="5090"/>
+    <param name="ws-binding" value="127.0.0.1:5066"/>
+    <param name="inbound-bypass-media" value="true"/>
+    <param name="disable-transcoding" value="true"/>
+    <param name="auth-calls" value="true"/>
+    <param name="apply-register-acl" value=""/>
+    <param name="force-register-domain" value="127.0.0.1"/>
+    <param name="force-register-db-domain" value="127.0.0.1"/>
+    <param name="inbound-codec-prefs" value="OPUS,PCMU,PCMA"/>
+    <param name="outbound-codec-prefs" value="OPUS,PCMU,PCMA"/>
+    <param name="manage-presence" value="false"/>
+    <param name="sip-trace" value="yes"/>
+  </settings>
+</profile>

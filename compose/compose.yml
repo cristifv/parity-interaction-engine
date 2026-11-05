@@ -1,0 +1,130 @@
+# The step-1 spike's environment (ADR 0002 §3). Every container on the host network;
+# freeswitch and parity-ms non-root with every capability dropped; SELinux labelling off for
+# the read-only bind mounts (as parity-contracts' buf.sh does). Evidence goes to spike/out/current.
+name: ie-spike
+
+services:
+  freeswitch:
+    image: docker.io/safarov/freeswitch:1.10.12@sha256:b31c743f4c911a19687c61e3214968f2a24f93f9d3d667cc26284192e158ffc6
+    network_mode: host
+    user: "${SPIKE_UID}:${SPIKE_GID}"
+    cap_drop: [ALL]
+    security_opt: [label=disable]
+    entrypoint:
+      - /usr/bin/freeswitch
+      - -nonat
+      - -nf
+      - -nc
+      - -np
+      - -conf
+      - /etc/freeswitch
+      - -log
+      - /spike-out
+      - -db
+      - /tmp/db
+      - -run
+      - /tmp/run
+      - -temp
+      - /tmp
+      - -cache
+      - /tmp/cache
+      - -storage
+      - /tmp/storage
+      - -recordings
+      - /tmp/recordings
+      - -sounds
+      - /tmp/sounds
+    volumes:
+      - ../freeswitch/conf:/etc/freeswitch:ro
+      - ../spike/out/current/freeswitch:/spike-out
+    tmpfs:
+      - /tmp:mode=1777
+    # The image's own check uses fs_cli's default password; ours waits for both profiles.
+    healthcheck:
+      test: ["CMD-SHELL", "fs_cli -H 127.0.0.1 -P 8021 -p spike-esl -x 'sofia status' | grep -c RUNNING | grep -qx 2"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  parity-ms:
+    image: docker.io/library/fedora@sha256:a651ddf48ea28a06ed4e1e6519f51c9f47e7a5a138722ade87369b8fbb7e5b42
+    network_mode: host
+    user: "${SPIKE_UID}:${SPIKE_GID}"
+    cap_drop: [ALL]
+    security_opt: [label=disable]
+    environment:
+      RUST_LOG: debug
+    command:
+      - /opt/media-server
+      - --node-id
+      - spike-1
+      - --media-ip
+      - 127.0.0.1
+      - --advertise-ip
+      - 127.0.0.1
+      - --control-listen
+      - ${MS_CONTROL}
+      - --control-allow-remote
+      - --port-min
+      - "30000"
+      - --port-max
+      - "30999"
+      - --prompt-dir
+      - /spike/prompts
+      - --recording-dir
+      - /spike/out/recordings
+      - --health-dir
+      - /spike/out
+      - --sched-main
+      - other:0
+      - --sched-rtp
+      - other:0
+      - --sched-io
+      - other:0
+      - --sched-log
+      - other:0
+      - --sched-watchdog
+      - other:0
+      - --log-json
+    volumes:
+      - ../../parity-ms/target/release/media-server:/opt/media-server:ro
+      - ../spike/prompts:/spike/prompts:ro
+      - ../spike/out/current/parity-ms:/spike/out
+    healthcheck:
+      test: ["CMD", "test", "-f", "/spike/out/parity-ms.healthy"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  tools:
+    profiles: [tools]
+    build: ./tools
+    image: ie-spike-tools:fc43
+    network_mode: host
+    user: "0:0"
+    cap_drop: [ALL]
+    cap_add: [NET_RAW, NET_ADMIN]
+    security_opt: [label=disable]
+    working_dir: /spike
+    volumes:
+      - ../spike:/spike
+
+  # The agent (ADR 0002 §2): SIP.js in headless Chromium as pwuser with Chromium's sandbox on.
+  # The sandbox needs user namespaces and chroot: Playwright's seccomp profile for v1.64.0
+  # (chromium-seccomp.json, sha256 cc3e61ca…1cc7849) allows clone/unshare, and SYS_CHROOT in the
+  # bounding set only switches on that profile's chroot rule; pwuser holds no effective capability.
+  browser:
+    profiles: [browser]
+    image: mcr.microsoft.com/playwright:v1.64.0-noble@sha256:06a9939e57531807f8d5fd76ce44b53165ffb7d7501d87ab10e285c20b1e971f
+    network_mode: host
+    user: pwuser
+    cap_drop: [ALL]
+    cap_add: [SYS_CHROOT]
+    security_opt: [label=disable, "seccomp=${SPIKE_SECCOMP}"]
+    shm_size: 512m
+    working_dir: /page
+    entrypoint: [node, /page/run.mjs]
+    volumes:
+      - ../spike/agent-page:/page:ro
+      - ../spike/prompts:/prompts:ro
+      - ../spike/out:/out

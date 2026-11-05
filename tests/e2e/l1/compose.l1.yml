@@ -1,0 +1,47 @@
+# IE step 6 (DEMO level 1): an override of parity-deploy's compose/compose.yml (owned by the
+# platform agent; read-only here). run.sh runs it under its own project name with every .run/
+# mount moved to its work directory and its own generated dev secrets, so nothing in
+# parity-deploy/compose/.run or in another agent's repo is written. Images by tag (L1_*_IMAGE),
+# recorded by id in inputs.txt. Services used: etcd, freeswitch, parity-ms, telephony-controller,
+# postgres (P2's roles: IE writes as a non-owner under RLS), parity-cc-routing, interaction-engine,
+# parity-gateway. No opensips (DEMO L1 leaves it out): SIPp calls freeswitch's carrier profile.
+services:
+  freeswitch:
+    volumes:
+      # PL-083: /var/log/freeswitch is a tmpfs in compose.yml (it holds the expanded configuration
+      # with the ESL password, PL-075); only json_cdr/ is re-pointed (README override point 4), the
+      # same folder TC reads. run.sh copies freeswitch.log out with `exec cat` before teardown.
+      - ${L1_WORK:?}/fs-log/json_cdr:/var/log/freeswitch/json_cdr
+      # The dev registrar's directory (agent-a1, agent-a2; generated passwords, 600): mounted over
+      # TC's empty directory/ (TC's conf stays untouched, read-only).
+      - ${L1_SECRETS:?}/fs-directory:/etc/freeswitch/directory:ro
+
+  parity-ms:
+    image: ${L1_MS_IMAGE:?}
+    command: ${L1_MS_COMMAND:?}
+    volumes:
+      - ${L1_WORK}/prompts:/prompts:ro
+      - ${L1_WORK}/ms-recordings:/recordings
+      - ${L1_WORK}/ms-health:/health
+
+  telephony-controller:
+    image: ${L1_TC_IMAGE:?}
+    command: ${L1_TC_COMMAND:?}
+    volumes:
+      - ${L1_WORK}/fs-log/json_cdr:/var/log/freeswitch/json_cdr:ro
+      - ${L1_WORK}/tc-lock:/run/parity-telephony-controller
+      - ${L1_WORK}/tc-journal:/var/lib/parity-telephony-controller/journal
+
+  parity-cc-routing:
+    image: ${L1_RE_IMAGE:?}
+
+  parity-gateway:
+    image: ${L1_GW_IMAGE:?}
+    volumes:
+      - ${L1_WORK}/gw/jwks.json:/run/parity-gateway/jwks.json:ro
+      - ${L1_SECRETS}/sip-agents.properties:/run/secrets/sip_agents_properties:ro
+
+  interaction-engine:
+    image: ${L1_IE_IMAGE:?}
+    volumes:
+      - ${L1_WORK}/ie.toml:/etc/parity-interaction-engine/ie.toml:ro

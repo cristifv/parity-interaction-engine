@@ -1,0 +1,12 @@
+<configuration name="switch.conf" description="Core Configuration">
+  <settings>
+    <!-- freeswitch's own RTP range: must stay EMPTY during the spike (AC2). -->
+    <param name="rtp-start-port" value="40000"/>
+    <param name="rtp-end-port" value="40999"/>
+    <param name="max-sessions" value="200"/>
+    <param name="sessions-per-second" value="50"/>
+    <param name="loglevel" value="debug"/>
+    <param name="colorize-console" value="false"/>
+    <param name="dump-cores" value="no"/>
+  </settings>
+</configuration>

@@ -1,0 +1,59 @@
+# IE step 6 (DEMO level 1) in parity-deploy's compose (run.sh fills @RECORDING@). As
+# parity-deploy compose/ie/ie.local-dev.toml, plus the agents' DTMF codes and recordings.
+[service]
+zone = "local"
+bin = "bin-a"
+replica_id = "ie-local-1"
+
+[management]
+listen = "127.0.0.1:9600"
+
+[lifecycle]
+deregistration_delay_ms = 500
+drain_timeout_ms = 3000
+
+[telephony]
+profile = "demo"
+test_peer_header = true
+[[telephony.nodes]]
+id = "media-1"
+grpc = "http://127.0.0.1:9700"
+management = "127.0.0.1:9701"
+
+[etcd]
+endpoint = "http://127.0.0.1:2379"
+lease_ttl_s = 10
+
+[tenants]
+maps_file = "/etc/parity-interaction-engine/tenants.json"
+allow_test_data = true
+
+[flows]
+file = "/etc/parity-interaction-engine/flows.json"
+
+# P2 (PL-051): IE writes as parity_ie (no owner, no RLS bypass, SELECT and INSERT only); the
+# migrations are applied by Postgres's init script as parity_ie_owner.
+[cdr]
+host = "172.28.0.10"
+port = 5432
+user = "parity_ie"
+dbname = "parity_interaction_engine"
+password_file = "/run/secrets/ie_cdr_postgres_password"
+migrate = false
+
+[routing]
+enabled = true
+endpoint = "http://127.0.0.1:9800"
+
+# TC's null sink (state and events, no audio written: MS-012) once the node has one; "off" before.
+[recording]
+mode = "@RECORDING@"
+
+# The platform defaults (*1 pause, *2 resume, *3 mute toggle), stated here for the demo.
+[agents]
+dtmf_inter_digit_ms = 2000
+dtmf_actions = [
+  {sequence = "*1", action = "recording_pause"},
+  {sequence = "*2", action = "recording_resume"},
+  {sequence = "*3", action = "mute_toggle"},
+]

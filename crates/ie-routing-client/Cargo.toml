@@ -1,0 +1,27 @@
+[package]
+name = "ie-routing-client"
+description = "interaction-engine's client of routing-engine (routing.v1): requests with fencing and retries, the Watch stream, acks (PLAN step 5a)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+parity-proto.workspace = true
+tonic.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+fastrand.workspace = true
+
+[dev-dependencies]
+ie-obs = { workspace = true, features = ["testing"] }
+parity-proto = { workspace = true, features = ["server"] }
+prost.workspace = true
+prost-reflect.workspace = true
+serde_json.workspace = true
+tokio-stream.workspace = true
+
+[lints]
+workspace = true

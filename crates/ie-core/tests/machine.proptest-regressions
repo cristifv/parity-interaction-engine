@@ -1,0 +1,11 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 0501feee04ca80c14db2bf0509896e732caaad473dd4fb8e7ee3a934d3cae901 # shrinks to events = [Call(Done(Done)), Press2, Call(Done(Done)), Call(Ended), Call(Ended)]
+cc fcab8d1dd605102c5297ea83ba52b684091a6bd75b4fc5cc1552cccaa38a09af # shrinks to events = [Assigned(1, false), Call(Done(Done)), Assigned(0, false), Press2, Answer(7), Call(Ended), Answer(37)]
+cc 31ecb7c5316ae0caf2c85196257b6cc1883a3e5d3b7fe91a79dbc87c1d0d6836 # shrinks to events = [Call(Resync(false)), Call(Finished(false)), Call(Resync(false)), Call(Done(Done)), Call(Unmanaged), Press2, Answer(51), Overflow(2), Call(Resync(true)), Answer(1), Call(Ended)]
+cc ba7bacb9c09c8ffe0c91a7608a33abda703e77ec23396621197918c1d9054c40 # shrinks to events = [Call(Done(Done)), Assigned(0, false), Press2, Answer(1), Assigned(1, false), Leg(1, 1), Call(Ended), Answer(15), Answer(1), Answer(1)]
+cc 137978f76518fa0434aed43d88ec424766788ec02bb4ddbbe3e8ed7ec0a54e7b # shrinks to music = false, events = [Assigned(0, false), Answer(187), Call(Tick(664)), Call(Tick(4336))]

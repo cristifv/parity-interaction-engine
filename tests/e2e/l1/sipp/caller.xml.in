@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<!-- IE step 6 (DEMO level 1): one carrier call to freeswitch's carrier profile (5080) with the
+     headers opensips would stamp (-key iid/tenant/bin). PCMU only, no telephone-event (G.711 end
+     to end; parity-ms detects the in-band tone). After the ACK the caller sends 440 Hz, waits the
+     -d pause (the consent announcement and its window, "Welcome to Acme", "Press 1 for sales"),
+     presses 1 in-band, goes back to 440 Hz, stays @STAY_MS@ ms (queue, agent, DTMF actions, the IE
+     kill), then hangs up (DEMO step 6). run.sh fills @STAY_MS@. -->
+<scenario name="ie step 6: caller">
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:+447700900123@[local_ip]:[local_port]>;tag=ie6Tag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:carrier@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      X-Interaction-ID: [iid]
+      X-Tenant-ID: [tenant]
+      X-CC-Bin: [bin]
+      X-CC-Trunk: carrier-a
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=carrier 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+      a=ptime:20
+      a=sendrecv
+    ]]>
+  </send>
+  <recv response="100" optional="true"/>
+  <recv response="180" optional="true"/>
+  <recv response="183" optional="true"/>
+  <recv response="200" rtd="true" rrs="true"/>
+  <send>
+    <![CDATA[
+      ACK [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:+447700900123@[local_ip]:[local_port]>;tag=ie6Tag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      [routes]
+      Contact: <sip:carrier@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Length: 0
+    ]]>
+  </send>
+  <nop><action><exec rtp_stream="/media/caller.ulaw,-1,0"/></action></nop>
+  <pause/>
+  <nop><action><exec rtp_stream="/media/dtmf-1.ulaw,1,0"/></action></nop>
+  <pause milliseconds="700"/>
+  <nop><action><exec rtp_stream="/media/caller.ulaw,-1,0"/></action></nop>
+  <pause milliseconds="@STAY_MS@"/>
+  <send retrans="500">
+    <![CDATA[
+      BYE [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:+447700900123@[local_ip]:[local_port]>;tag=ie6Tag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      [routes]
+      Contact: <sip:carrier@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Length: 0
+    ]]>
+  </send>
+  <recv response="200" timeout="10000"/>
+</scenario>

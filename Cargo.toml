@@ -1,0 +1,65 @@
+[workspace]
+resolver = "3"
+members = ["crates/ie-core", "crates/ie-obs", "crates/ie-routing-client", "crates/ie-telephony-client", "crates/interaction-engine"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "UNLICENSED"
+publish = false
+
+# Versions: the newest release at least 14 days old on 2026-10-25 where the newest was younger
+# (tokio is locked at 1.53.3: 12 days old, but 1.53.2 has an advisory, which wins over the
+# 14-day rule). Cargo.lock pins exact versions; every command runs --locked.
+[workspace.dependencies]
+ie-core = { path = "crates/ie-core" }
+ie-obs = { path = "crates/ie-obs" }
+ie-telephony-client = { path = "crates/ie-telephony-client" }
+ie-routing-client = { path = "crates/ie-routing-client" }
+# parity-contracts' generated protos, by path until there is git (ADR 0003 D1).
+parity-proto = { path = "../parity-contracts/rust/parity-proto" }
+prost = "0.14.4"
+tonic = { version = "0.14.6", default-features = false, features = ["codegen", "channel"] }
+# etcd's gRPC API with hand-written messages (step 3's minimal owner claim).
+tonic-prost = "0.14.6"
+uuid = { version = "1", features = ["v7"] }
+anyhow = "1"
+axum = { version = "0.8", default-features = false, features = ["tokio", "http1"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive", "env"] }
+fastrand = "2"
+# The OS RNG for a recording's data key (step 6: the null sink's DEK; already in the tree via uuid).
+getrandom = "0.4"
+opentelemetry = { version = "0.33", default-features = false, features = ["metrics"] }
+opentelemetry-prometheus = "0.33"
+opentelemetry_sdk = { version = "0.33", default-features = false, features = ["metrics"] }
+prometheus = { version = "0.14", default-features = false, features = ["process"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+# say -> its pre-rendered prompt id (step 4).
+sha2 = "0.10.9"
+# Postgres for the CDR (step 4): no macros; plain TCP on loopback until mTLS.
+tokio-postgres = { version = "0.7.18", default-features = false, features = ["runtime"] }
+thiserror = "2"
+tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "signal", "net", "time", "sync", "fs", "io-util"] }
+toml = "1"
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "registry", "fmt", "env-filter"] }
+tempfile = "3"
+proptest = "1"
+prost-reflect = { version = "0.16", features = ["serde"] }
+tokio-stream = "0.1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"

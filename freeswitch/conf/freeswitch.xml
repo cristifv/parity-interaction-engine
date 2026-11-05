@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Minimal freeswitch 1.10 configuration for the step-1 spike (ADR 0002 §4): signalling only,
+     bypass media, ESL on loopback. Every setting that matters is visible here. -->
+<document type="freeswitch/xml">
+  <X-PRE-PROCESS cmd="set" data="domain=127.0.0.1"/>
+  <X-PRE-PROCESS cmd="set" data="esl_password=spike-esl"/>
+  <section name="configuration" description="Various Configuration">
+    <X-PRE-PROCESS cmd="include" data="autoload_configs/*.xml"/>
+  </section>
+  <section name="dialplan" description="Regex/XML Dialplan">
+    <X-PRE-PROCESS cmd="include" data="dialplan/*.xml"/>
+  </section>
+  <section name="directory" description="User Directory">
+    <X-PRE-PROCESS cmd="include" data="directory/*.xml"/>
+  </section>
+</document>

@@ -1,0 +1,33 @@
+[package]
+name = "ie-obs"
+description = "interaction-engine's logging, PII masking and metrics (the shared crate of ARCHITECTURE.md §5.2)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+# ie_obs::testing: the production subscriber over an in-memory writer, and the canary check.
+testing = []
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+opentelemetry.workspace = true
+opentelemetry-prometheus.workspace = true
+opentelemetry_sdk.workspace = true
+prometheus.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+ie-obs = { path = ".", features = ["testing"] }
+
+[lints]
+workspace = true

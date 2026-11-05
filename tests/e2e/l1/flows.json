@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "flows": {
+    "acme-main": {
+      "tenant_id": "acme",
+      "start": "menu",
+      "steps": {
+        "menu": [
+          {"say": {"text": "Welcome to Acme.", "language": "en-GB"}},
+          {"say": {"text": "Press 1 for sales.", "language": "en-GB"}},
+          {"gather": {"input": "dtmf", "num_digits": 1, "timeout_s": 6, "routes": {"1": "sales"}, "default": "menu"}}
+        ],
+        "sales": [
+          {"say": {"text": "Thank you. Please hold for an agent.", "language": "en-GB"}},
+          {"dial": {"queue": "sales", "music": "hold-music", "announce_position": true}},
+          {"say": {"text": "Goodbye.", "language": "en-GB"}},
+          {"hangup": {}}
+        ]
+      },
+      "no_input": [{"say": {"text": "Goodbye.", "language": "en-GB"}}, {"hangup": {}}]
+    }
+  },
+  "numbers": {
+    "+15550100100": {"flow": "acme-main"}
+  },
+  "consent": {
+    "acme": {
+      "mode": "announce_opt_out",
+      "digit": "9",
+      "window_s": 3,
+      "record": true,
+      "announce": [{"say": {"text": "This call may be recorded. Press 9 to opt out.", "language": "en-GB"}}]
+    }
+  }
+}

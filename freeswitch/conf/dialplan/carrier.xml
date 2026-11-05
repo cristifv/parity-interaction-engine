@@ -1,0 +1,41 @@
+<!-- ADR 0002 §4. The outbound socket is only the notice that a call arrived: the driver reads
+     the channel, closes the socket, and the call parks (socket_resume). Nothing answers here. -->
+<include>
+  <context name="carrier">
+    <!-- AC5(5): a parallel call that only makes events (parks, unanswered, ends after 6 s). -->
+    <extension name="parallel">
+      <condition field="destination_number" expression="^1999$">
+        <action application="set" data="bypass_media=true"/>
+        <action application="sched_hangup" data="+6 normal_clearing"/>
+        <action application="park"/>
+      </condition>
+    </extension>
+    <extension name="spike-inbound">
+      <condition field="destination_number" expression="^(\+?\d+)$">
+        <action application="set" data="bypass_media=true"/>
+        <action application="set" data="socket_resume=true"/>
+        <action application="set" data="cc_spike=1"/>
+        <action application="socket" data="127.0.0.1:8084 async full"/>
+        <action application="park"/>
+      </condition>
+    </extension>
+  </context>
+  <!-- The loopback "carrier" for originates (ADR 0002 §7.4, S3): loopback-b parks here; the
+       driver sets switch_r_sdp and bypass_media on it, then bridges it to the agent, so the
+       agent's leg inherits proxy mode and sends that SDP. -->
+  <context name="loopback">
+    <extension name="agent-leg">
+      <condition field="destination_number" expression="^agentleg-(.+)$">
+        <action application="set" data="spike_agent_leg=$1"/>
+        <action application="park"/>
+      </condition>
+    </extension>
+  </context>
+  <context name="agents">
+    <extension name="nothing">
+      <condition field="destination_number" expression="^.*$">
+        <action application="hangup" data="CALL_REJECTED"/>
+      </condition>
+    </extension>
+  </context>
+</include>
